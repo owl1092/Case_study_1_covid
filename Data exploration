@@ -1,0 +1,114 @@
+Case Study : COVID Details worldwide
+Timeframe : Dec, 2019 - Mar, 2022
+Datasource : https://ourworldindata.org/covid-deaths
+
+#select data we are going to use
+
+select location, date, total_cases, new_cases, total_deaths, population
+from my-first-bigquery-project1422.covid_casestudy.covid_deaths 
+order by 1,2
+
+#looking at total cases vs total deaths
+#probability of dying from covid in any specific country
+
+select location, date, total_cases, total_deaths, (total_deaths/total_cases)*100 as 
+death_percentage
+from my-first-bigquery-project1422.covid_casestudy.covid_deaths
+where location='India'
+order by 1,2
+
+#looking at total cases vs population
+#represents the percentage of population affected by the virus
+
+select location, date, total_cases, population, (total_cases/population)*100 as affected_percentage
+from my-first-bigquery-project1422.covid_casestudy.covid_deaths
+where location='India'
+order by 1,2
+
+#looking at countries with highest infection rate
+
+select location,population, max(total_cases) as highest_infected, round((max(total_cases)/population)*100,2) as affected_percentage
+from my-first-bigquery-project1422.covid_casestudy.covid_deaths
+group by location, population
+order by affected_percentage desc
+
+#looking at countries with highest death rate
+
+select location,population, max(total_deaths) as highest_deaths, round((max(total_deaths)/population)*100,2) as death_percentage
+from my-first-bigquery-project1422.covid_casestudy.covid_deaths
+group by location, population
+order by death_percentage desc
+
+#looking at data by continent
+
+#highest infected per continent
+
+select continent, max(total_cases) as highest_infected
+from my-first-bigquery-project1422.covid_casestudy.covid_deaths
+group by continent
+having continent is not null
+order by highest_infected desc
+
+#total infected per continent
+
+select continent, sum(total_cases) as highest_infected
+from my-first-bigquery-project1422.covid_casestudy.covid_deaths
+group by continent
+having continent is not null
+order by highest_infected desc
+
+#highest death per continent
+
+select continent, max(total_deaths) as highest_death
+from my-first-bigquery-project1422.covid_casestudy.covid_deaths
+group by continent
+having continent is not null
+order by highest_death desc
+
+#total death per continent
+
+select continent, sum(total_deaths) as highest_death
+from my-first-bigquery-project1422.covid_casestudy.covid_deaths
+group by continent
+having continent is not null
+order by highest_death desc
+
+#infection_rate per continent
+
+select continent, round((sum(total_cases)/sum(population))*100,2) as infection_rate_per_continent
+from my-first-bigquery-project1422.covid_casestudy.covid_deaths
+group by continent
+having continent is not null
+order by infection_rate_per_continent desc
+
+#percentage of death against total cases per continent
+
+select continent, round((sum(total_deaths)/sum(total_cases))*100,2) as death_rate_per_continent
+from my-first-bigquery-project1422.covid_casestudy.covid_deaths
+group by continent
+having continent is not null
+order by death_rate_per_continent desc
+
+#Global data datewise
+
+select date, sum(new_cases), sum(new_deaths), round((sum(new_deaths)/sum(new_cases))*100,2) as new_death_rate
+from my-first-bigquery-project1422.covid_casestudy.covid_deaths
+where new_cases <> 0
+group by date
+order by date
+
+#Global vaccination details
+
+select d.continent, d.location, d.date, d.population, v.new_vaccinations,
+sum(v.new_vaccinations) over (partition by d.location order by d.location, d.date) as cumulative_new_vaccinations,
+from my-first-bigquery-project1422.covid_casestudy.covid_deaths d join
+my-first-bigquery-project1422.covid_casestudy.covid_vaccination v
+on d.location = v.location
+and d.date = v.date
+order by 2,3
+
+
+select continent, location, date, population, new_vaccinations,cumulative_new_vaccinations,
+round((cumulative_new_vaccinations/population)*100,2)
+from my-first-bigquery-project1422.covid_casestudy.popvsvac
+
